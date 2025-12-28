@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tvshow.title }} - Netflix Clone{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- TV Show Header -->
+            <div class="show-header mb-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        {% if tvshow.poster %}
+                        <img src="{{ tvshow.poster.url }}" alt="{{ tvshow.title }}" class="img-fluid rounded shadow">
+                        {% else %}
+                        <div class="placeholder-poster-large">
+                            <i class="fas fa-tv"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <h1 class="display-4 fw-bold text-white mb-3">{{ tvshow.title }}</h1>
+                        
+                        <div class="show-meta mb-3">
+                            <span class="badge bg-danger me-2">{{ tvshow.release_date.year }}</span>
+                            <div class="rating d-inline-flex align-items-center">
+                                <i class="fas fa-star text-warning me-1"></i>
+                                <span class="fw-bold">{{ tvshow.rating }}/10</span>
+                            </div>
+                        </div>
+                        
+                        <div class="genres mb-3">
+                            {% for genre in tvshow.genres.all %}
+                            <span class="badge bg-outline-light me-1">{{ genre.name }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <p class="lead text-light mb-4">{{ tvshow.description }}</p>
+                        
+                        <div class="show-actions">
+                            {% if tvshow.trailer_url %}
+                            <a href="{{ tvshow.trailer_url }}" target="_blank" class="btn btn-danger btn-lg me-3">
+                                <i class="fas fa-play me-2"></i>Watch Trailer
+                            </a>
+                            {% endif %}
+                            
+                            {% if user.is_authenticated %}
+                            {% if is_in_watchlist %}
+                            <form method="post" action="{% url 'remove_from_watchlist' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="content_type" value="tvshow">
+                                <input type="hidden" name="content_id" value="{{ tvshow.id }}">
+                                <button type="submit" class="btn btn-outline-light btn-lg me-3">
+                                    <i class="fas fa-check me-2"></i>In My List
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'add_to_watchlist' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="content_type" value="tvshow">
+                                <input type="hidden" name="content_id" value="{{ tvshow.id }}">
+                                <button type="submit" class="btn btn-outline-light btn-lg me-3">
+                                    <i class="fas fa-plus me-2"></i>Add to My List
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% endif %}
+                            
+                            <button class="btn btn-outline-light btn-lg" onclick="shareShow()">
+                                <i class="fas fa-share-alt me-2"></i>Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Episodes Section -->
+            <div class="episodes-section mb-5">
+                <h3 class="text-white mb-4">Episodes</h3>
+                
+                {% if seasons %}
+                <div class="episodes-list">
+                    {% for season_num, episodes in seasons.items %}
+                    <div class="season mb-4">
+                        <div class="season-header">
+                            <h4 class="text-white">Season {{ season_num }}</h4>
+                        </div>
+                        <div class="episodes-grid">
+                            {% for episode in episodes %}
+                            <div class="episode-item mb-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-2">
+                                                <div class="episode-number">
+                                                    <span class="badge bg-danger">{{ episode.episode_number }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-10">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="card-title text-white mb-1">{{ episode.title }}</h6>
+                                                        <p class="card-text text-light mb-2">{{ episode.description|truncatewords:20 }}</p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>{{ episode.duration }} min
+                                                            <span class="ms-3">
+                                                                <i class="fas fa-calendar me-1"></i>{{ episode.release_date|date:"M d, Y" }}
+                                                            </span>
+                                                        </small>
+                                                    </div>
+                                                    <div class="episode-actions">
+                                                        <a href="{% url 'episode_detail' episode.id %}" class="btn btn-sm btn-danger">
+                                                            <i class="fas fa-play me-1"></i>Watch
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-episodes text-center py-5">
+                    <i class="fas fa-tv text-muted" style="font-size: 3rem;"></i>
+                    <h4 class="text-muted mt-3">No episodes available</h4>
+                    <p class="text-muted">Episodes will be added soon!</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Reviews Section -->
+            <div class="reviews-section">
+                <h3 class="text-white mb-4">Reviews</h3>
+                
+                {% if user.is_authenticated %}
+                <!-- Add Review Form -->
+                <div class="add-review mb-4">
+                    <div class="card bg-dark">
+                        <div class="card-body">
+                            <h5 class="card-title text-white">Write a Review</h5>
+                            <form method="post" action="{% url 'add_review' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="content_type" value="tvshow">
+                                <input type="hidden" name="content_id" value="{{ tvshow.id }}">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-white">Rating</label>
+                                    <div class="rating-input">
+                                        <input type="radio" name="rating" value="5" id="star5" required>
+                                        <label for="star5"><i class="fas fa-star"></i></label>
+                                        <input type="radio" name="rating" value="4" id="star4">
+                                        <label for="star4"><i class="fas fa-star"></i></label>
+                                        <input type="radio" name="rating" value="3" id="star3">
+                                        <label for="star3"><i class="fas fa-star"></i></label>
+                                        <input type="radio" name="rating" value="2" id="star2">
+                                        <label for="star2"><i class="fas fa-star"></i></label>
+                                        <input type="radio" name="rating" value="1" id="star1">
+                                        <label for="star1"><i class="fas fa-star"></i></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label text-white">Comment</label>
+                                    <textarea class="form-control" name="comment" id="comment" rows="3" placeholder="Share your thoughts..." required></textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-danger">Submit Review</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Reviews List -->
+                {% if reviews %}
+                <div class="reviews-list">
+                    {% for review in reviews %}
+                    <div class="review-item mb-3">
+                        <div class="card bg-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title text-white mb-0">{{ review.user.username }}</h6>
+                                    <div class="review-rating">
+                                        {% for i in "12345" %}
+                                        <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <p class="card-text text-light">{{ review.comment }}</p>
+                                <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-reviews text-center py-5">
+                    <i class="fas fa-comments text-muted" style="font-size: 3rem;"></i>
+                    <h4 class="text-muted mt-3">No reviews yet</h4>
+                    <p class="text-muted">Be the first to review this show!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="sidebar">
+                <!-- Show Info -->
+                <div class="show-info mb-4">
+                    <h4 class="text-white mb-3">Show Info</h4>
+                    <div class="info-item mb-2">
+                        <strong class="text-white">Release Date:</strong>
+                        <span class="text-light">{{ tvshow.release_date|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="info-item mb-2">
+                        <strong class="text-white">Rating:</strong>
+                        <span class="text-light">{{ tvshow.rating }}/10</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-white">Genres:</strong>
+                        <div class="mt-1">
+                            {% for genre in tvshow.genres.all %}
+                            <span class="badge bg-secondary me-1 mb-1">{{ genre.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Similar Shows -->
+                <div class="similar-shows">
+                    <h4 class="text-white mb-3">Similar Shows</h4>
+                    <p class="text-muted">Similar shows feature coming soon!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.placeholder-poster-large {
+    width: 100%;
+    aspect-ratio: 2/3;
+    background: var(--netflix-dark-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: var(--netflix-light-gray);
+    border-radius: 8px;
+}
+
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input label {
+    font-size: 1.5rem;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-input label:hover,
+.rating-input label:hover ~ label,
+.rating-input input:checked ~ label {
+    color: #ffc107;
+}
+
+.review-rating .fas {
+    font-size: 0.8rem;
+}
+
+.show-info,
+.similar-shows {
+    background: var(--netflix-dark-gray);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--netflix-light-gray);
+}
+
+.info-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--netflix-light-gray);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.episode-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.episode-actions {
+    display: flex;
+    align-items: center;
+}
+</style>
+
+<script>
+function shareShow() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ tvshow.title }}',
+            text: 'Check out this TV show on Netflix Clone!',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

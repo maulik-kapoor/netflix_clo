@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Who's Watching? - Netflix Clone{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex flex-col items-center justify-center">
+    <h1 class="text-3xl md:text-4xl font-semibold text-white/90 mb-8">Who's Watching?</h1>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 w-full max-w-6xl">
+        {% if profiles %}
+            {% for p in profiles %}
+            <a href="{% url 'profile_use' p.id %}" class="group">
+                <div class="rounded-xl overflow-hidden bg-neutral-800/60 hover:bg-neutral-700/60 transition shadow-sm hover:shadow-lg">
+                    <div class="aspect-square w-full overflow-hidden">
+                        {% if p.avatar_image %}
+                        <img src="{{ p.avatar_image.url }}" alt="{{ p.name }}" class="h-full w-full object-cover transform transition duration-300 group-hover:scale-[1.05]" />
+                        {% else %}
+                        <div class="h-full w-full grid place-items-center text-gray-400">
+                            <i class="fas fa-user text-5xl"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="px-4 py-3">
+                        <p class="text-center text-gray-200 font-medium truncate">{{ p.name }}</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <p class="col-span-full text-center text-gray-400">No profiles yet. Ask admin to create one.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+

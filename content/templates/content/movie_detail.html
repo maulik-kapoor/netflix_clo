@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ movie.title }} - Netflix Clone{% endblock %}
+
+{% block content %}
+<section class="relative overflow-hidden rounded-2xl">
+    <!-- Blurred darkened background -->
+    {% if movie.poster %}
+    <div class="absolute inset-0 -z-10">
+        <img src="{{ movie.poster.url }}" alt="{{ movie.title }} background" class="h-full w-full object-cover" />
+        <div class="absolute inset-0 bg-black/70"></div>
+        <div class="absolute inset-0 backdrop-blur-md"></div>
+    </div>
+    {% elif tmdb_backdrop_url %}
+    <div class="absolute inset-0 -z-10">
+        <img src="{{ tmdb_backdrop_url }}" alt="{{ movie.title }} background" class="h-full w-full object-cover" />
+        <div class="absolute inset-0 bg-black/70"></div>
+        <div class="absolute inset-0 backdrop-blur-md"></div>
+    </div>
+    {% endif %}
+
+    <div class="relative px-4 sm:px-6 md:px-10 py-8 md:py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div class="md:col-span-1">
+                <div class="rounded-xl overflow-hidden bg-neutral-800">
+                    {% if movie.poster %}
+                    <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="w-full h-full object-cover" />
+                    {% elif tmdb_poster_url %}
+                    <img src="{{ tmdb_poster_url }}" alt="{{ movie.title }}" class="w-full h-full object-cover" />
+                    {% else %}
+                    <div class="aspect-[2/3] w-full grid place-items-center text-gray-500">
+                        <i class="fas fa-film text-5xl"></i>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-white/90 mb-4">{{ movie.title }}</h1>
+                <div class="flex flex-wrap items-center gap-2 text-sm text-gray-300 mb-4">
+                    {% if movie.release_date %}
+                    <span class="inline-flex items-center rounded-full bg-red-600/20 text-red-300 px-3 py-1">{{ movie.release_date.year }}</span>
+                    {% endif %}
+                    {% if movie.duration %}
+                    <span class="inline-flex items-center rounded-full bg-neutral-700/60 px-3 py-1">{{ movie.duration }} min</span>
+                    {% endif %}
+                    {% if movie.rating %}
+                    <span class="inline-flex items-center rounded-full bg-yellow-600/20 text-yellow-300 px-3 py-1"><i class="fas fa-star mr-1"></i>{{ movie.rating }}/10</span>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-5">
+                    {% for genre in movie.genres.all %}
+                    <span class="inline-flex items-center rounded-full bg-white/10 text-gray-200 px-3 py-1">{{ genre.name }}</span>
+                    {% endfor %}
+                </div>
+
+                {% if movie.description %}
+                <p class="text-gray-200/90 leading-relaxed mb-6">{{ movie.description }}</p>
+                {% endif %}
+
+                <div class="flex flex-wrap items-center gap-3">
+                    {% if movie.trailer_url %}
+                    <a href="{{ movie.trailer_url }}" target="_blank" class="inline-flex items-center rounded-full bg-red-600 hover:bg-red-500 text-white font-semibold px-6 py-3 transition">
+                        <i class="fas fa-play mr-2"></i> Play
+                    </a>
+                    {% elif tmdb_trailer_url %}
+                    <a href="{{ tmdb_trailer_url }}" target="_blank" class="inline-flex items-center rounded-full bg-red-600 hover:bg-red-500 text-white font-semibold px-6 py-3 transition">
+                        <i class="fas fa-play mr-2"></i> Play Trailer
+                    </a>
+                    {% else %}
+                    <button class="inline-flex items-center rounded-full bg-red-600 text-white font-semibold px-6 py-3 opacity-80 cursor-not-allowed">
+                        <i class="fas fa-play mr-2"></i> Play
+                    </button>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        {% if is_in_watchlist %}
+                        <form method="post" action="{% url 'remove_from_watchlist' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="content_type" value="movie">
+                            <input type="hidden" name="content_id" value="{{ movie.id }}">
+                            <button type="submit" class="inline-flex items-center rounded-full border border-gray-400/60 text-gray-200 hover:bg-white/10 px-6 py-3 transition">
+                                <i class="fas fa-check mr-2"></i> In My List
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'add_to_watchlist' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="content_type" value="movie">
+                            <input type="hidden" name="content_id" value="{{ movie.id }}">
+                            <button type="submit" class="inline-flex items-center rounded-full border border-gray-400/60 text-gray-200 hover:bg-white/10 px-6 py-3 transition">
+                                <i class="fas fa-plus mr-2"></i> Add to My List
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews (kept minimal, optional UI refresh) -->
+<section class="mt-10">
+    <h3 class="text-2xl font-semibold text-white/90 mb-4">Reviews</h3>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'add_review' %}" class="bg-neutral-900/60 border border-neutral-700/60 rounded-xl p-4 mb-6">
+        {% csrf_token %}
+        <input type="hidden" name="content_type" value="movie">
+        <input type="hidden" name="content_id" value="{{ movie.id }}">
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm text-gray-300 mb-1">Rating</label>
+                <select name="rating" required class="w-full bg-neutral-800 text-gray-200 rounded-md px-3 py-2">
+                    <option value="">Select…</option>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm text-gray-300 mb-1">Comment</label>
+                <textarea name="comment" rows="3" required class="w-full bg-neutral-800 text-gray-200 rounded-md px-3 py-2" placeholder="Share your thoughts..."></textarea>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="inline-flex items-center rounded-md bg-red-600 hover:bg-red-500 text-white px-4 py-2">Submit Review</button>
+        </div>
+    </form>
+    {% endif %}
+
+    {% if reviews %}
+    <div class="space-y-3">
+        {% for review in reviews %}
+        <div class="bg-neutral-900/60 border border-neutral-700/60 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-1">
+                <h6 class="text-gray-200 font-medium">{{ review.user.username }}</h6>
+                <div class="text-yellow-400">
+                    {% for i in "12345" %}
+                        <i class="fas fa-star {% if forloop.counter <= review.rating %}{% else %}text-neutral-600{% endif %}"></i>
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="text-gray-300">{{ review.comment }}</p>
+            <small class="text-gray-500">{{ review.created_at|date:"M d, Y" }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center text-gray-500 py-8">No reviews yet. Be the first to review!</div>
+    {% endif %}
+</section>
+{% endblock %}

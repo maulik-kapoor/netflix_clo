@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My List - Netflix Clone{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-white mb-4">
+                <i class="fas fa-list me-2"></i>My List
+            </h1>
+            
+            {% if watchlist_items %}
+            <div class="watchlist-items">
+                <div class="row g-3">
+                    {% for item in watchlist_items %}
+                    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                        <div class="movie-card">
+                            <div class="movie-poster">
+                                {% if item.movie %}
+                                    {% if item.movie.poster %}
+                                    <img src="{{ item.movie.poster.url }}" alt="{{ item.movie.title }}" class="img-fluid">
+                                    {% else %}
+                                    <div class="placeholder-poster">
+                                        <i class="fas fa-film"></i>
+                                    </div>
+                                    {% endif %}
+                                {% elif item.tv_show %}
+                                    {% if item.tv_show.poster %}
+                                    <img src="{{ item.tv_show.poster.url }}" alt="{{ item.tv_show.title }}" class="img-fluid">
+                                    {% else %}
+                                    <div class="placeholder-poster">
+                                        <i class="fas fa-tv"></i>
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                                
+                                <div class="movie-overlay">
+                                    <div class="movie-info">
+                                        <h6 class="movie-title">
+                                            {% if item.movie %}
+                                                {{ item.movie.title }}
+                                                <small class="d-block text-muted">Movie</small>
+                                            {% elif item.tv_show %}
+                                                {{ item.tv_show.title }}
+                                                <small class="d-block text-muted">TV Show</small>
+                                            {% endif %}
+                                        </h6>
+                                        
+                                        <div class="movie-rating">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <span>
+                                                {% if item.movie %}
+                                                    {{ item.movie.rating }}
+                                                {% elif item.tv_show %}
+                                                    {{ item.tv_show.rating }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="movie-actions">
+                                            {% if item.movie %}
+                                            <a href="{% url 'movie_detail' item.movie.id %}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                            {% elif item.tv_show %}
+                                            <a href="{% url 'tvshow_detail' item.tv_show.id %}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                            {% endif %}
+                                            
+                                            <form method="post" action="{% url 'remove_from_watchlist' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="content_type" value="{% if item.movie %}movie{% else %}tvshow{% endif %}">
+                                                <input type="hidden" name="content_id" value="{% if item.movie %}{{ item.movie.id }}{% else %}{{ item.tv_show.id }}{% endif %}">
+                                                <button type="submit" class="btn btn-sm btn-outline-light" onclick="return confirm('Remove from your list?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        
+                                        <small class="text-muted">
+                                            Added {{ item.added_at|date:"M d, Y" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% else %}
+            <!-- Empty Watchlist -->
+            <div class="empty-watchlist text-center py-5">
+                <i class="fas fa-list-ul text-muted" style="font-size: 4rem;"></i>
+                <h3 class="text-muted mt-3">Your list is empty</h3>
+                <p class="text-muted">Start adding movies and TV shows to your list</p>
+                <a href="{% url 'home' %}" class="btn btn-danger mt-3">
+                    <i class="fas fa-plus me-2"></i>Browse Content
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

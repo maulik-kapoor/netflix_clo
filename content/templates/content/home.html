@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Netflix Clone{% endblock %}
+
+{% block content %}
+{% if my_list_movies %}
+<section class="mb-10">
+    <div class="flex items-baseline justify-between mb-3 px-1 md:px-2">
+        <h2 class="text-xl md:text-2xl font-semibold text-white/90">My List</h2>
+    </div>
+    <div class="relative">
+        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
+            {% for movie in my_list_movies %}
+            <div class="snap-start shrink-0 w-[48%] xs:w-40 sm:w-44 md:w-48 lg:w-52">
+                <a href="{% url 'movie_detail' movie.id %}" class="group block">
+                    <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-neutral-800">
+                        {% if movie.poster %}
+                        <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="h-full w-full object-cover rounded-lg transform transition duration-300 group-hover:scale-[1.05] group-hover:shadow-2xl" />
+                        {% else %}
+                        <div class="h-full w-full grid place-items-center text-gray-500"> 
+                            <i class="fas fa-film text-3xl"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-sm md:text-base text-gray-200 truncate">{{ movie.title }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="h-px bg-white/5 mt-6"></div>
+</section>
+{% endif %}
+
+<!-- Hero Section (Tailwind) -->
+{% if featured_movies %}
+<section class="relative w-full h-[60vh] md:h-[70vh] rounded-xl overflow-hidden mb-10"
+         style="{% if featured_movies.0.poster %}background-image: url('{{ featured_movies.0.poster.url }}');{% endif %} background-size: cover; background-position: center;">
+    <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-basebg/60 to-transparent"></div>
+    <div class="relative h-full flex items-end md:items-center">
+        <div class="max-w-5xl px-2 md:px-6 lg:px-10 py-6 md:py-10">
+            <h1 class="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white/90 drop-shadow mb-4 md:mb-6">
+                {{ featured_movies.0.title }}
+            </h1>
+            <p class="text-sm md:text-base text-gray-300 max-w-2xl mb-4 md:mb-6">
+                {{ featured_movies.0.description|truncatewords:30 }}
+            </p>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'movie_detail' featured_movies.0.id %}" class="inline-flex items-center rounded-md bg-red-600 hover:bg-red-500 text-white font-medium px-5 py-2.5 transition">
+                    <i class="fas fa-play mr-2"></i> Watch Now
+                </a>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'add_to_watchlist' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="content_type" value="movie">
+                    <input type="hidden" name="content_id" value="{{ featured_movies.0.id }}">
+                    <button type="submit" class="inline-flex items-center rounded-md border border-gray-500/50 text-gray-200 hover:bg-white/10 px-5 py-2.5 transition">
+                        <i class="fas fa-plus mr-2"></i> Add to List
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Section Builder -->
+<div class="space-y-10">
+    {% if featured_movies %}
+    <section>
+        <div class="flex items-baseline justify-between mb-3 px-1 md:px-2">
+            <h2 class="text-xl md:text-2xl font-semibold text-white/90">Featured Movies</h2>
+            <a href="#" class="text-red-500 hover:text-red-400 text-sm">View All</a>
+        </div>
+        <div class="relative">
+            <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
+                {% for movie in featured_movies %}
+                <div class="snap-start shrink-0 w-[48%] xs:w-40 sm:w-44 md:w-48 lg:w-52">
+                    <a href="{% url 'movie_detail' movie.id %}" class="group block">
+                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-neutral-800">
+                            {% if movie.poster %}
+                            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="h-full w-full object-cover rounded-lg transform transition duration-300 group-hover:scale-[1.05] group-hover:shadow-2xl" />
+                            {% else %}
+                            <div class="h-full w-full grid place-items-center text-gray-500"> 
+                                <i class="fas fa-film text-3xl"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-sm md:text-base text-gray-200 truncate">{{ movie.title }}</p>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if featured_tvshows %}
+    <section>
+        <div class="flex items-baseline justify-between mb-3 px-1 md:px-2">
+            <h2 class="text-xl md:text-2xl font-semibold text-white/90">Featured TV Shows</h2>
+            <a href="#" class="text-red-500 hover:text-red-400 text-sm">View All</a>
+        </div>
+        <div class="relative">
+            <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
+                {% for tvshow in featured_tvshows %}
+                <div class="snap-start shrink-0 w-[48%] xs:w-40 sm:w-44 md:w-48 lg:w-52">
+                    <a href="{% url 'tvshow_detail' tvshow.id %}" class="group block">
+                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-neutral-800">
+                            {% if tvshow.poster %}
+                            <img src="{{ tvshow.poster.url }}" alt="{{ tvshow.title }}" class="h-full w-full object-cover rounded-lg transform transition duration-300 group-hover:scale-[1.05] group-hover:shadow-2xl" />
+                            {% else %}
+                            <div class="h-full w-full grid place-items-center text-gray-500"> 
+                                <i class="fas fa-tv text-3xl"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-sm md:text-base text-gray-200 truncate">{{ tvshow.title }}</p>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_movies %}
+    <section>
+        <div class="flex items-baseline justify-between mb-3 px-1 md:px-2">
+            <h2 class="text-xl md:text-2xl font-semibold text-white/90">Latest Movies</h2>
+            <a href="#" class="text-red-500 hover:text-red-400 text-sm">View All</a>
+        </div>
+        <div class="relative">
+            <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
+                {% for movie in recent_movies %}
+                <div class="snap-start shrink-0 w-[48%] xs:w-40 sm:w-44 md:w-48 lg:w-52">
+                    <a href="{% url 'movie_detail' movie.id %}" class="group block">
+                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-neutral-800">
+                            {% if movie.poster %}
+                            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="h-full w-full object-cover rounded-lg transform transition duration-300 group-hover:scale-[1.05] group-hover:shadow-2xl" />
+                            {% else %}
+                            <div class="h-full w-full grid place-items-center text-gray-500"> 
+                                <i class="fas fa-film text-3xl"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-sm md:text-base text-gray-200 truncate">{{ movie.title }}</p>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_tvshows %}
+    <section>
+        <div class="flex items-baseline justify-between mb-3 px-1 md:px-2">
+            <h2 class="text-xl md:text-2xl font-semibold text-white/90">Latest TV Shows</h2>
+            <a href="#" class="text-red-500 hover:text-red-400 text-sm">View All</a>
+        </div>
+        <div class="relative">
+            <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
+                {% for tvshow in recent_tvshows %}
+                <div class="snap-start shrink-0 w-[48%] xs:w-40 sm:w-44 md:w-48 lg:w-52">
+                    <a href="{% url 'tvshow_detail' tvshow.id %}" class="group block">
+                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-neutral-800">
+                            {% if tvshow.poster %}
+                            <img src="{{ tvshow.poster.url }}" alt="{{ tvshow.title }}" class="h-full w-full object-cover rounded-lg transform transition duration-300 group-hover:scale-[1.05] group-hover:shadow-2xl" />
+                            {% else %}
+                            <div class="h-full w-full grid place-items-center text-gray-500"> 
+                                <i class="fas fa-tv text-3xl"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-sm md:text-base text-gray-200 truncate">{{ tvshow.title }}</p>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

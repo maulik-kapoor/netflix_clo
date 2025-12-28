@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search - Netflix Clone{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-white mb-4">
+                {% if query %}
+                Search Results for "{{ query }}"
+                {% else %}
+                Search
+                {% endif %}
+            </h1>
+            
+            {% if query %}
+            <!-- Search Results -->
+            {% if results %}
+            <!-- Movies Results -->
+            {% if results.movies %}
+            <section class="mb-5">
+                <h2 class="text-white mb-3">Movies ({{ results.movies.count }})</h2>
+                <div class="row g-3">
+                    {% for movie in results.movies %}
+                    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                        <div class="movie-card">
+                            <div class="movie-poster">
+                                {% if movie.poster %}
+                                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="img-fluid">
+                                {% else %}
+                                <div class="placeholder-poster">
+                                    <i class="fas fa-film"></i>
+                                </div>
+                                {% endif %}
+                                <div class="movie-overlay">
+                                    <div class="movie-info">
+                                        <h6 class="movie-title">{{ movie.title }}</h6>
+                                        <div class="movie-rating">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <span>{{ movie.rating }}</span>
+                                        </div>
+                                        <div class="movie-actions">
+                                            <a href="{% url 'movie_detail' movie.id %}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                            {% if user.is_authenticated %}
+                                            <form method="post" action="{% url 'add_to_watchlist' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="content_type" value="movie">
+                                                <input type="hidden" name="content_id" value="{{ movie.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-light">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+            
+            <!-- TV Shows Results -->
+            {% if results.tvshows %}
+            <section class="mb-5">
+                <h2 class="text-white mb-3">TV Shows ({{ results.tvshows.count }})</h2>
+                <div class="row g-3">
+                    {% for tvshow in results.tvshows %}
+                    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                        <div class="movie-card">
+                            <div class="movie-poster">
+                                {% if tvshow.poster %}
+                                <img src="{{ tvshow.poster.url }}" alt="{{ tvshow.title }}" class="img-fluid">
+                                {% else %}
+                                <div class="placeholder-poster">
+                                    <i class="fas fa-tv"></i>
+                                </div>
+                                {% endif %}
+                                <div class="movie-overlay">
+                                    <div class="movie-info">
+                                        <h6 class="movie-title">{{ tvshow.title }}</h6>
+                                        <div class="movie-rating">
+                                            <i class="fas fa-star text-warning"></i>
+                                            <span>{{ tvshow.rating }}</span>
+                                        </div>
+                                        <div class="movie-actions">
+                                            <a href="{% url 'tvshow_detail' tvshow.id %}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                            {% if user.is_authenticated %}
+                                            <form method="post" action="{% url 'add_to_watchlist' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="content_type" value="tvshow">
+                                                <input type="hidden" name="content_id" value="{{ tvshow.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-light">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+            
+            {% else %}
+            <!-- No Results -->
+            <div class="no-results text-center py-5">
+                <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                <h3 class="text-muted mt-3">No results found</h3>
+                <p class="text-muted">Try searching with different keywords</p>
+                <a href="{% url 'home' %}" class="btn btn-danger mt-3">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <!-- Search Form -->
+            <div class="search-form-container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="card bg-dark">
+                            <div class="card-body text-center">
+                                <h3 class="text-white mb-4">Search Movies & TV Shows</h3>
+                                <form action="{% url 'search' %}" method="get">
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" class="form-control" name="q" placeholder="Enter movie or TV show name..." required>
+                                        <button class="btn btn-danger" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                                <p class="text-muted mt-3">Find your favorite movies and TV shows</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
